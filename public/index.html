@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ViewTube</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Navigation -->
+    <nav id="navbar">
+      <div class="nav-left">
+        <button id="sidebar-toggle" class="icon-btn">&#9776;</button>
+        <a href="#" class="logo" onclick="navigate('home')">
+          <span class="logo-icon">▶</span>
+          <span class="logo-text">ViewTube</span>
+        </a>
+      </div>
+      <div class="nav-center">
+        <div class="search-bar">
+          <input type="text" id="search-input" placeholder="Search videos..." />
+          <button id="search-btn" onclick="searchVideos()">🔍</button>
+        </div>
+      </div>
+      <div class="nav-right">
+        <div id="auth-btns" class="hidden">
+          <button class="btn btn-ghost" onclick="showModal('login-modal')">Sign in</button>
+          <button class="btn btn-primary" onclick="showModal('register-modal')">Sign up</button>
+        </div>
+        <div id="user-menu" class="hidden">
+          <button class="btn btn-ghost" onclick="navigate('messages')">
+            <span>✉</span> Messages <span id="unread-badge" class="badge hidden">0</span>
+          </button>
+          <button class="btn btn-primary" onclick="navigate('upload')">+ Upload</button>
+          <div class="avatar-wrap" onclick="toggleUserDropdown()">
+            <div id="nav-avatar" class="avatar">?</div>
+            <div id="user-dropdown" class="dropdown hidden">
+              <div class="dropdown-user"></div>
+              <div id="admin-badge-nav" class="hidden" style="padding:4px 16px 8px;"><span class="admin-tag">👑 Admin</span></div>
+              <hr>
+              <a href="#" onclick="navigate('profile-self')">My Channel</a>
+              <a href="#" onclick="navigate('home')">Home</a>
+              <a id="admin-panel-link" href="#" class="hidden" onclick="navigate('admin')">⚙ Admin Panel</a>
+              <hr>
+              <a href="#" onclick="logout()">Sign out</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <a class="sidebar-item active" href="#" onclick="navigate('home')"><span>🏠</span> Home</a>
+      <a class="sidebar-item" href="#" onclick="navigate('messages')"><span>✉</span> Messages</a>
+      <a class="sidebar-item" href="#" onclick="navigate('upload')"><span>⬆</span> Upload</a>
+      <a id="sidebar-admin" class="sidebar-item hidden" href="#" onclick="navigate('admin')"><span>👑</span> Admin</a>
+    </div>
+
+    <!-- Main Content -->
+    <main id="main-content">
+
+      <!-- HOME PAGE -->
+      <div id="page-home" class="page active">
+        <div class="page-header"><h2>Latest Videos</h2></div>
+        <div id="home-grid" class="video-grid"></div>
+        <div id="home-empty" class="empty-state hidden">
+          <div class="empty-icon">📹</div>
+          <h3>No videos yet</h3>
+          <p>Be the first to upload!</p>
+          <button class="btn btn-primary" onclick="navigate('upload')">Upload Now</button>
+        </div>
+      </div>
+
+      <!-- WATCH PAGE -->
+      <div id="page-watch" class="page hidden">
+        <div class="watch-layout">
+          <div class="watch-main">
+            <div class="video-player-wrap">
+              <video id="video-player" controls></video>
+            </div>
+            <div class="video-info">
+              <h1 id="watch-title"></h1>
+              <div class="video-meta">
+                <span id="watch-views"></span>
+                <span id="watch-date"></span>
+              </div>
+              <div class="video-actions">
+                <div class="like-group">
+                  <button id="like-btn" class="action-btn" onclick="likeVideo('like')">👍 <span id="like-count">0</span></button>
+                  <button id="dislike-btn" class="action-btn" onclick="likeVideo('dislike')">👎 <span id="dislike-count">0</span></button>
+                </div>
+                <button id="message-creator-btn" class="action-btn" onclick="messageCreator()">✉ Message Creator</button>
+                <button id="subscribe-btn" class="action-btn subscribe-btn" onclick="toggleSubscribe()">Subscribe</button>
+                <button id="admin-delete-video-btn" class="action-btn admin-btn hidden" onclick="adminDeleteVideo()">🗑 Delete</button>
+              </div>
+              <div class="channel-info">
+                <div class="channel-avatar" id="watch-channel-avatar"></div>
+                <div>
+                  <a id="watch-channel-name" href="#" class="channel-link" onclick="viewChannel()"></a>
+                  <span id="watch-channel-admin-tag" class="admin-tag hidden">👑 Admin</span>
+                  <div id="watch-sub-count" class="sub-count"></div>
+                </div>
+              </div>
+              <div id="watch-description" class="description"></div>
+            </div>
+            <div class="comments-section">
+              <h3 id="comments-count">Comments</h3>
+              <div id="comment-form-wrap">
+                <div class="comment-form">
+                  <div class="avatar comment-avatar" id="comment-user-avatar"></div>
+                  <div class="comment-input-wrap">
+                    <input type="text" id="comment-input" placeholder="Add a comment..." />
+                    <div class="comment-actions hidden" id="comment-actions">
+                      <button class="btn btn-ghost" onclick="cancelComment()">Cancel</button>
+                      <button class="btn btn-primary" onclick="submitComment()">Comment</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div id="comments-list"></div>
+            </div>
+          </div>
+          <div class="watch-sidebar">
+            <h3>More Videos</h3>
+            <div id="related-videos"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPLOAD PAGE — Step 1: Pick file -->
+      <div id="page-upload" class="page hidden">
+        <div class="upload-modal-wrap">
+          <div class="upload-modal">
+            <div class="upload-modal-header">
+              <h2>Upload video</h2>
+              <button class="modal-close" onclick="navigate('home')">✕</button>
+            </div>
+            <div class="upload-step1" id="upload-step1">
+              <!-- Hidden file input lives OUTSIDE the drop zone to avoid event conflicts -->
+              <input type="file" id="video-file-input" accept="video/*" style="display:none" onchange="handleFileSelect(event)">
+              <div class="upload-drop-zone" id="upload-drop-zone"
+                ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+                onclick="handleDropZoneClick(event)">
+                <div class="upload-circle">
+                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                    <path d="M24 8L24 32M24 8L14 18M24 8L34 18" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8 36H40" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <p class="upload-main-text">Drag and drop video files to upload</p>
+                <p class="upload-sub-text">Your videos will be private until you publish them</p>
+                <button class="btn btn-upload-select" onclick="openFilePicker()">Select files</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPLOAD PAGE — Step 2: Details -->
+      <div id="page-upload-details" class="page hidden">
+        <div class="upload-details-wrap">
+          <div class="upload-details-header">
+            <div>
+              <h2>Video details</h2>
+              <p class="upload-filename" id="upload-filename-display"></p>
+            </div>
+            <div class="upload-details-actions">
+              <button class="btn btn-ghost" onclick="cancelUploadDetails()">Cancel</button>
+              <button class="btn btn-primary" id="publish-btn" onclick="submitUpload()">Publish</button>
+            </div>
+          </div>
+          <div class="upload-details-body">
+            <div class="upload-details-left">
+              <div class="form-group">
+                <label>Title <span style="color:var(--accent)">*</span></label>
+                <input type="text" id="upload-title" placeholder="Add a title that describes your video" maxlength="100" />
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea id="upload-description" placeholder="Tell viewers about your video..." rows="5"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Thumbnail</label>
+                <div class="thumb-picker">
+                  <div class="thumb-option" id="thumb-upload-option" onclick="document.getElementById('thumb-file-input').click()">
+                    <div class="thumb-option-icon">📁</div>
+                    <div class="thumb-option-label">Upload image</div>
+                  </div>
+                  <input type="file" id="thumb-file-input" accept="image/*" style="display:none" onchange="previewThumb(event)">
+                  <div class="thumb-preview-wrap hidden" id="thumb-preview-wrap">
+                    <img id="thumb-preview" alt="Thumbnail" />
+                    <button class="thumb-remove" onclick="removeThumb()">✕</button>
+                  </div>
+                </div>
+              </div>
+              <div id="upload-progress-wrap" class="hidden">
+                <div class="upload-progress-label">
+                  <span>Uploading...</span>
+                  <span id="upload-progress-text">0%</span>
+                </div>
+                <div class="progress-bar"><div id="upload-progress" class="progress-fill"></div></div>
+              </div>
+            </div>
+            <div class="upload-details-right">
+              <div class="upload-preview-box">
+                <video id="upload-video-preview" controls></video>
+                <div class="upload-preview-info">
+                  <div class="upload-preview-label">Preview</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MESSAGES PAGE -->
+      <div id="page-messages" class="page hidden">
+        <div class="messages-layout">
+          <div class="conversations-panel">
+            <h3>Messages</h3>
+            <div id="conversations-list"></div>
+            <div id="conversations-empty" class="empty-state hidden"><p>No conversations yet</p></div>
+          </div>
+          <div class="chat-panel">
+            <div id="chat-placeholder" class="chat-placeholder">
+              <div class="empty-icon">💬</div>
+              <p>Select a conversation</p>
+            </div>
+            <div id="chat-active" class="hidden">
+              <div class="chat-header">
+                <div class="avatar chat-header-avatar" id="chat-partner-avatar"></div>
+                <span id="chat-partner-name"></span>
+              </div>
+              <div id="chat-messages" class="chat-messages"></div>
+              <div class="chat-input-wrap">
+                <input type="text" id="chat-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMessage()" />
+                <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE PAGE -->
+      <div id="page-profile" class="page hidden">
+        <div class="profile-header">
+          <div class="profile-banner"></div>
+          <div class="profile-info">
+            <div class="avatar profile-avatar" id="profile-avatar"></div>
+            <div class="profile-details">
+              <h2 id="profile-username"></h2>
+              <span id="profile-admin-tag" class="admin-tag hidden">👑 Admin</span>
+              <div id="profile-sub-count"></div>
+              <div id="profile-bio"></div>
+            </div>
+            <div class="profile-actions">
+              <button id="profile-subscribe-btn" class="btn btn-primary" onclick="toggleSubscribeProfile()"></button>
+              <button id="profile-message-btn" class="btn btn-ghost" onclick="messageProfileUser()">✉ Message</button>
+            </div>
+          </div>
+        </div>
+        <div class="profile-content">
+          <h3>Videos</h3>
+          <div id="profile-videos" class="video-grid"></div>
+        </div>
+      </div>
+
+      <!-- SEARCH PAGE -->
+      <div id="page-search" class="page hidden">
+        <div class="page-header"><h2>Search: "<span id="search-query-display"></span>"</h2></div>
+        <div id="search-grid" class="video-grid"></div>
+        <div id="search-empty" class="empty-state hidden">
+          <div class="empty-icon">🔍</div><h3>No results found</h3>
+        </div>
+      </div>
+
+      <!-- ADMIN PAGE -->
+      <div id="page-admin" class="page hidden">
+        <div class="admin-container">
+          <h2>👑 Admin Panel</h2>
+          <div class="admin-tabs">
+            <button class="admin-tab active" onclick="showAdminTab('videos', event)">Videos</button>
+            <button class="admin-tab" onclick="showAdminTab('users', event)">Users</button>
+          </div>
+          <div id="admin-videos-tab"><h3>All Videos</h3><div id="admin-videos-list"></div></div>
+          <div id="admin-users-tab" class="hidden"><h3>All Users</h3><div id="admin-users-list"></div></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MODALS -->
+  <div id="modal-overlay" class="modal-overlay hidden" onclick="closeAllModals()"></div>
+
+  <div id="login-modal" class="modal hidden">
+    <div class="modal-header">
+      <h2>Sign in to ViewTube</h2>
+      <button class="modal-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-username" placeholder="Your username" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter') submitLogin()" />
+      </div>
+      <div id="login-error" class="error-msg hidden"></div>
+      <button class="btn btn-primary btn-full" onclick="submitLogin()">Sign in</button>
+      <p class="modal-switch">No account? <a href="#" onclick="switchModal('login-modal','register-modal')">Sign up</a></p>
+    </div>
+  </div>
+
+  <div id="register-modal" class="modal hidden">
+    <div class="modal-header">
+      <h2>Create Account</h2>
+      <button class="modal-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="reg-username" placeholder="Choose a username" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="••••••••" onkeydown="if(event.key==='Enter') submitRegister()" />
+      </div>
+      <div id="reg-error" class="error-msg hidden"></div>
+      <button class="btn btn-primary btn-full" onclick="submitRegister()">Create Account</button>
+      <p class="modal-switch">Have an account? <a href="#" onclick="switchModal('register-modal','login-modal')">Sign in</a></p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="/js/app.js"></script>
+</body>
+</html>
